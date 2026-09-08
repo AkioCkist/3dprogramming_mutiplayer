@@ -1,0 +1,150 @@
+Network Architecture — Mermaid Diagrams
+========================================
+Godot 4 racing game. Built-in high-level multiplayer (ENetMultiplayerPeer, port 7777),
+MultiplayerSpawner + per-node authority. Host = "listen server" (peer-hosted), no
+dedicated server. Singleplayer boots the SAME server, only autostart flag differs.
+
+------------------------------------------------------------------------
+1) TOPOLOGY — who is server / who is client
+------------------------------------------------------------------------
+```mermaid
+flowchart TB
+    Menu["Main Menu (gui_menu)"]
+    Menu --> SP["SINGLEPLAYER  autostart=true"]
+    Menu --> HP["HOST CHAMPIONSHIP  autostart=false"]
+    Menu --> JP["JOIN CHAMPIONSHIP"]
+
+    SP --> HostA["Host = SERVER + Player  (peer id 1)"]
+    HP --> HostB["Host = SERVER + Player  (peer id 1)"]
+    JP --> Client["Client only  (no server peer)"]
+
+    HostA --> ENET["ENetMultiplayerPeer server on :7777"]
+    HostB --> ENET
+    Client -- "connect(localhost | join address)" --> ENET
+
+    subgraph Singleplayer[Singleplayer = local server]
+        HostA
+        ENET
+    end
+    subgraph Multiplayer[Multiplayer championship]
+        HostB
+        ENET
+        Client
+    end
+
+    ENET --> Level["race_scene loads once, peer kept alive (has_peer)"]
+```
+
+------------------------------------------------------------------------
+2) JOIN HANDSHAKE — how a peer registers as a player
+------------------------------------------------------------------------
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Client peer
+    participant S as Host/Server peer id 1
+    participant GC as GameController.players dict
+
+    Note over S: Host also forces self-registration:<br/>multiplayer.peer_connected.emit(1)
+    S->>GC: run same handshake for itself
+    S-->>C: peer_connected(id)
+    S->>C: client_request_connect_args (rpc)
+    C->>S: server_send_connect_args(username, color)
+    S->>GC: players[id] = {username, color}<br/>keyed by get_remote_sender_id()
+    S-->>C: client_send_player_list(players)
+    C-->>GC: store copy (never overwrites server dict)
+```
+
+------------------------------------------------------------------------
+3) WHO CREATES & WHO OWNS EACH PLAYER OBJECT
+------------------------------------------------------------------------
+```mermaid
+flowchart TB
+    subgraph Host["HOST (server id 1)"]
+        RACE["RaceLevel.setup_race()"]
+        SPAWN["instantiate TrackVehicle<br/>name = str(player_peer_id)"]
+        REPL["add_child under Replicated tree"]
+        SPAWNER["MultiplayerSpawner watches ../Replicated"]
+        AUTH["vehicle_spawned()<br/>set_multiplayer_authority(player_peer_id)"]
+    end
+    subgraph Client["CLIENT (peer N)"]
+        COPIES["receives replicated vehicle copies"]
+        INPUT["reads own input  (if is_multiplayer_authority)"]
+        CAM["chases own camera rig"]
+    end
+
+    RACE --> SPAWN --> REPL
+    SPAWN --> AUTH
+    AUTH -->|"peer id 1 (host car)"| HOSTCAR["Host owns host car"]
+    AUTH -->|"peer id N (remote car)"| CLIENTCAR["Client N owns its car"]
+    REPL -- "spawn packet" --> SPAWNER
+    SPAWNER -- "replicated spawn" --> COPIES
+    HOSTCAR --> INPUT
+    CLIENTCAR --> INPUT
+    HOSTCAR --> CAM
+    CLIENTCAR --> CAM
+```
+
+Ownership summary:
+- Every TrackVehicle = exactly ONE authority = the peer whose id it is named after.
+- Only the authority simulates physics + reads input + drives the follow camera.
+- Host additionally owns the WORLD: checkpoints, hurdles, power-ups, rules.
+- Host cannot move a client-owned car directly -> must ask via RPC
+  (remote_restore_vehicle / remote_drift / remote_center_impulse).
+
+------------------------------------------------------------------------
+4) ONE RACE START (server spawns, grants input after countdown)
+------------------------------------------------------------------------
+```mermaid
+sequenceDiagram
+    autonumber
+    participant G as gui_game HUD
+    participant S as Host/Server
+    participant C as Client (owner of car N)
+    participant V as TrackVehicle (authority = N)
+
+    Note over G: Host presses START GAME<br/>or singleplayer autostart fires
+    G->>S: race_ready
+    S->>S: setup_race (ONE_SHOT)
+    S->>S: spawn car per player -> replication
+    S->>C: replicated spawn
+    S-->>C: client_notify_race_ready (rpc)
+    C->>V: input_allowed = false
+    Note over S: wait 4.2s (countdown window)
+    S->>V: remote_allow_input(true)
+    V-->>S: drives, transform replicated back to all peers
+```
+
+------------------------------------------------------------------------
+5) SYNCED vs LOCAL-ONLY DATA
+------------------------------------------------------------------------
+```mermaid
+flowchart LR
+    subgraph SYNC["SYNCED over network"]
+        S1["vehicle transform / rotation / velocity<br/>(authority physics replication)"]
+        S2["vehicle spawn events (MultiplayerSpawner)"]
+        S3["player registry: id, username, color"]
+        S4["lap / checkpoint progress (server only)"]
+        S5["finish order + winners (server only)"]
+        S6["race ready / start / restart broadcasts"]
+        S7["hurdle + power-up spawn"]
+        S8["rank #N per owner (unreliable_ordered)"]
+    end
+    subgraph LOC["LOCAL-ONLY"]
+        L1["own input keys (never sent raw)"]
+        L2["chase camera pose + speed FOV"]
+        L3["own username label hidden, others shown"]
+        L4["lap timer text / countdown cosmetics"]
+        L5["engine pitch + collision impact sounds"]
+        L6["GameConfig prefs persisted to disk"]
+        L7["autostart flag (singleplayer shortcut)"]
+    end
+```
+
+Details:
+- Physics bodies are simulated ONCE on their authority, then the transform is
+  replicated to every peer. No manual position packets.
+- Discrete events travel as RPCs; GameController relays them to UI via signals.
+- "Score/health" do not exist; shared state = progress (lap+checkpoint),
+  carried power-up, finish order — all arbitrated host-side.
+- Server state survives scene reloads because the ENet peer is kept alive (has_peer).
