@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://du6jn3welhhay"]
 
+[ext_resource type="VideoStream" uid="uid://dtsgg2qkrbo57" path="res://assets/bg_video/bg.ogv" id="1_3fsyd"]
 [ext_resource type="SystemFont" uid="uid://ct034n7reyacb" path="res://assets/fonts/font_gui.tres" id="1_ubd4l"]
 [ext_resource type="FontFile" uid="uid://cjwm2snl02m8m" path="res://assets/fonts/JetBrainsMono-ExtraBold.ttf" id="2_3g0x6"]
 
@@ -99,6 +100,15 @@ func _exit_tree() -> void:
 	dump_gui_to_config()
 "
 
+[sub_resource type="GDScript" id="GDScript_video"]
+resource_name = "gui_bg_video_loop"
+script/source = "extends VideoStreamPlayer
+
+## Restart the video from the beginning once it ends
+func _ready() -> void:
+	finished.connect(play)
+"
+
 [sub_resource type="LabelSettings" id="LabelSettings_3g0x6"]
 font = ExtResource("1_ubd4l")
 font_size = 90
@@ -126,15 +136,29 @@ grow_horizontal = 2
 grow_vertical = 2
 script = SubResource("GDScript_ubd4l")
 
+[node name="BgVideo" type="VideoStreamPlayer" parent="." unique_id=1000000037]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+stream = ExtResource("1_3fsyd")
+autoplay = true
+expand = true
+script = SubResource("GDScript_video")
+
 [node name="GameTitleAlways" type="Label" parent="." unique_id=1617023414]
 layout_mode = 0
-offset_left = 58.0
-offset_top = 26.0
-offset_right = 826.0
-offset_bottom = 162.0
-text = "UNTITLED RACING GAME"
+offset_left = 231.0
+offset_top = 19.0
+offset_right = 999.0
+offset_bottom = 155.0
+text = "TU TU TU DU MAX VERSTAPPEN!"
 label_settings = SubResource("LabelSettings_3g0x6")
-horizontal_alignment = 2
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="MainMenu" type="Control" parent="." unique_id=85385736]
 unique_name_in_owner = true
@@ -142,6 +166,7 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 161.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -163,11 +188,11 @@ text = "SINGLEPLAYER"
 
 [node name="ButtonHost" type="Button" parent="MainMenu/VBoxContainer" unique_id=462680748]
 layout_mode = 2
-text = "HOST CHAMPIONSHIP"
+text = "HOST A LOBBY"
 
 [node name="ButtonJoin" type="Button" parent="MainMenu/VBoxContainer" unique_id=932053148]
 layout_mode = 2
-text = "JOIN CHAMPIONSHIP"
+text = "JOIN A LOBBY"
 
 [node name="Spacer" type="Control" parent="MainMenu/VBoxContainer" unique_id=1228571912]
 custom_minimum_size = Vector2(0, 10)
