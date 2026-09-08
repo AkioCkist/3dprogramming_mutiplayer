@@ -1,0 +1,179 @@
+[gd_scene format=3 uid="uid://d21t43daurkyc"]
+
+[ext_resource type="Script" uid="uid://yespkd0chaob" path="res://scripts/race_level.gd" id="1_75jvp"]
+[ext_resource type="VoxelGIData" uid="uid://bxni807q6khp6" path="res://assets/scenes/race_scene.VoxelGI_data.res" id="1_ye1en"]
+[ext_resource type="AudioStream" uid="uid://b6evmrf4tetoc" path="res://assets/music/Manuel - Gas Gas Gas.mp3" id="2_1iope"]
+[ext_resource type="PackedScene" uid="uid://boqgajvqur8bm" path="res://assets/models/race_track.glb" id="2_84tdg"]
+[ext_resource type="PackedScene" uid="uid://bx8ixkxjeopoc" path="res://assets/scenes/ui/gui_game.tscn" id="2_w31q1"]
+[ext_resource type="Material" uid="uid://c0lbd2wb3amak" path="res://assets/materials/track_material.tres" id="3_l62bs"]
+[ext_resource type="Texture2D" uid="uid://bqh6xoj6rvv68" path="res://assets/skybox/skybox-day.png" id="4_1a2r0"]
+[ext_resource type="Texture2D" uid="uid://cmrgl33j5ggij" path="res://assets/textures/finish_line.png" id="4_uyqe3"]
+[ext_resource type="PackedScene" uid="uid://boy7iyv5lex3k" path="res://assets/models/low_poly_forest.glb" id="8_1iope"]
+
+[sub_resource type="Curve3D" id="Curve3D_75jvp"]
+closed = true
+bake_interval = 36.0
+_data = {
+"points": PackedVector3Array(0, 0.13, 0, 0, 0, 0, 6.816907, 1.9617205, 7.9589186, 0, 0, 0, 0, 0, 0, -15.190273, 2.5762968, 35.98163, 0, 0, 0, 0, 0, 0, -45.312138, 5.619735, 41.441074, 0, 0, 0, 0, 0, 0, -72.1129, 9.072422, 34.345764, 0, 0, 0, 0, 0, 0, -87.08142, 12.157223, 14.245183, 0, 0, 0, 0, 0, 0, -87.509094, 15.8135605, -8.849093, 0, 0, 0, 0, 0, 0, -75.391716, 18.999123, -27.809206, 0, 0, 0, 0, 0, 0, -54.578358, 20.426369, -34.93707, 0, 0, 0, 0, 0, 0, -31.731047, 20.747831, -29.049631, 0, 0, 0, 0, 0, 0, -13.664425, 20.198854, -11.842795, 0, 0, 0, 0, 0, 0, -2.054757, 23.16732, 2.9634695, 0, 0, 0, 0, 0, 0, 12.628656, 17.430708, 19.938965, 0, 0, 0, 0, 0, 0, 30.243206, 12.078577, 34.91599, 0, 0, 0, 0, 0, 0, 50.914013, 6.9933686, 32.92018, 0, 0, 0, 0, 0, 0, 63.459057, 5.78773, 19.804916, 0, 0, 0, 0, 0, 0, 65.45485, 5.9125767, 1.7001442, 0, 0, 0, 0, 0, 0, 55.333294, 6.113054, -12.840693, 0, 0, 0, 0, 0, 0, 37.96225, 4.7440405, -16.960575, 0, 0, 0, 0, 0, 0, 20.670982, 2.9928074, -9.989551, 0, 0, 0, 0, 0, 0, 9.714962, 1.9617205, 3.4108324),
+"tilts": PackedFloat32Array(0, 0, -0.09768494, -0.094176285, -0.17390321, -0.24795179, -0.3243468, 0, -0.4562216, -0.47277367, -0.47277367, -0.4547978, -0.548991, -0.65754193, -0.761708, -0.73657835, -0.7718652, -0.7880411, -0.88702065, -0.9598355)
+}
+point_count = 20
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_tyba0"]
+panorama = ExtResource("4_1a2r0")
+energy_multiplier = 1.3
+
+[sub_resource type="Sky" id="Sky_uyqe3"]
+sky_material = SubResource("PanoramaSkyMaterial_tyba0")
+
+[sub_resource type="Environment" id="Environment_l62bs"]
+background_mode = 2
+background_color = Color(0.27459797, 0.3588607, 0.373518, 1)
+sky = SubResource("Sky_uyqe3")
+ambient_light_source = 2
+ambient_light_color = Color(0.19863054, 0.28311375, 0.33952898, 1)
+ssao_enabled = true
+sdfgi_enabled = true
+glow_enabled = true
+glow_bloom = 0.25
+fog_mode = 1
+fog_light_color = Color(1, 1, 1, 1)
+fog_light_energy = 0.69
+fog_density = 0.2307
+fog_aerial_perspective = 0.317
+fog_sky_affect = 0.192
+volumetric_fog_density = 0.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_75jvp"]
+albedo_texture = ExtResource("4_uyqe3")
+texture_filter = 0
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_w31q1"]
+material = SubResource("StandardMaterial3D_75jvp")
+size = Vector2(12.895, 2)
+
+[node name="Level" type="Node3D" unique_id=2125619924 node_paths=PackedStringArray("level_nodes_root", "racetrack_path", "camera_rig", "spawner", "replication_bin", "music")]
+script = ExtResource("1_75jvp")
+vehicle_spawn_group_name = &"VehicleSpawnNode"
+level_nodes_root = NodePath("LevelNodes")
+racetrack_path = NodePath("LevelNodes/Path3D")
+camera_rig = NodePath("CameraRig")
+spawner = NodePath("MultiplayerSpawner")
+replication_bin = NodePath("Replicated")
+music = NodePath("AudioStreamPlayer")
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=519975040]
+stream = ExtResource("2_1iope")
+volume_db = -10.0
+bus = &"Music"
+
+[node name="GUIRoot" parent="." unique_id=1057016824 instance=ExtResource("2_w31q1")]
+
+[node name="MultiplayerSpawner" type="MultiplayerSpawner" parent="." unique_id=203583883]
+_spawnable_scenes = PackedStringArray("uid://i11ncmcknpxw", "uid://b7m87dp0yy0vj", "uid://b647lbs7cpp6s", "uid://bsuqarlvk1y3p")
+spawn_path = NodePath("../Replicated")
+
+[node name="PathedHurdleReplicator" type="MultiplayerSpawner" parent="." unique_id=1750257883]
+_spawnable_scenes = PackedStringArray("uid://ges2ci55816s")
+spawn_path = NodePath("../LevelNodes/Path3D")
+
+[node name="LevelNodes" type="Node3D" parent="." unique_id=137066868]
+
+[node name="VehicleSpawn" type="Node3D" parent="LevelNodes" unique_id=266193982 groups=["VehicleSpawnNode"]]
+transform = Transform3D(-0.84107673, 0, 0.54091585, 0, 1, 0, -0.54091585, 0, -0.84107673, 5.9573383, 2.4807854, 4.271776)
+
+[node name="VehicleSpawn2" type="Node3D" parent="LevelNodes" unique_id=1996374756 groups=["VehicleSpawnNode"]]
+transform = Transform3D(-0.84107673, 0, 0.54091585, 0, 1, 0, -0.54091585, 0, -0.84107673, 8.557708, 2.4807854, 5.9441333)
+
+[node name="VehicleSpawn3" type="Node3D" parent="LevelNodes" unique_id=1245205668 groups=["VehicleSpawnNode"]]
+transform = Transform3D(-0.84107673, 0, 0.54091585, 0, 1, 0, -0.54091585, 0, -0.84107673, 11.13538, 2.4807854, 7.6018944)
+
+[node name="VehicleSpawn4" type="Node3D" parent="LevelNodes" unique_id=789182602 groups=["VehicleSpawnNode"]]
+transform = Transform3D(-0.84107673, 0, 0.54091585, 0, 1, 0, -0.54091585, 0, -0.84107673, 8.46956, 2.4807854, 0.36549282)
+
+[node name="VehicleSpawn5" type="Node3D" parent="LevelNodes" unique_id=1807646907 groups=["VehicleSpawnNode"]]
+transform = Transform3D(-0.84107673, 0, 0.54091585, 0, 1, 0, -0.54091585, 0, -0.84107673, 11.069928, 2.4807854, 2.03785)
+
+[node name="VehicleSpawn6" type="Node3D" parent="LevelNodes" unique_id=167548442 groups=["VehicleSpawnNode"]]
+transform = Transform3D(-0.84107673, 0, 0.54091585, 0, 1, 0, -0.54091585, 0, -0.84107673, 13.647601, 2.4807854, 3.695611)
+
+[node name="Path3D" type="Path3D" parent="LevelNodes" unique_id=1277828743]
+curve = SubResource("Curve3D_75jvp")
+
+[node name="RocketSpawn" type="RayCast3D" parent="LevelNodes" unique_id=1815102726 groups=["PowerupSpawnNode"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9196055, 2.4619267, 16.892681)
+exclude_parent = false
+collision_mask = 2
+debug_shape_custom_color = Color(1, 0, 0, 1)
+debug_shape_thickness = 5
+metadata/powerup_id = 1
+
+[node name="SpillSpawn" type="RayCast3D" parent="LevelNodes" unique_id=1884514092 groups=["PowerupSpawnNode"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4474165, 2.4619262, 19.909735)
+exclude_parent = false
+collision_mask = 2
+debug_shape_custom_color = Color(0.13636157, 9.400537e-08, 1.8049032e-08, 1)
+debug_shape_thickness = 5
+metadata/powerup_id = 0
+
+[node name="SpillSpawn2" type="RayCast3D" parent="LevelNodes" unique_id=674027909 groups=["PowerupSpawnNode"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.779632, 19.969767, -8.46265)
+exclude_parent = false
+collision_mask = 2
+debug_shape_custom_color = Color(0.13636157, 9.400537e-08, 1.8049032e-08, 1)
+debug_shape_thickness = 5
+metadata/powerup_id = 0
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1473826617]
+environment = SubResource("Environment_l62bs")
+
+[node name="VoxelGI" type="VoxelGI" parent="." unique_id=1668389587]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.264404, 13.482666, 8.287842)
+size = Vector3(170, 27, 103)
+data = ExtResource("1_ye1en")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1080485427]
+transform = Transform3D(1, 0, 0, 0, -0.4735811, 0.8807502, 0, -0.8807502, -0.4735811, 0, 0, 0)
+light_indirect_energy = 10.0
+light_bake_mode = 1
+shadow_enabled = true
+
+[node name="CameraRig" type="SpringArm3D" parent="." unique_id=1261000767]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5773015, 0)
+spring_length = 4.0
+
+[node name="Camera3D" type="Camera3D" parent="CameraRig" unique_id=1299171527]
+
+[node name="race_track" parent="." unique_id=490915060 instance=ExtResource("2_84tdg")]
+
+[node name="Plane" parent="race_track" index="0" unique_id=596662664]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.0565085, 0, 0)
+material_override = ExtResource("3_l62bs")
+
+[node name="StaticBody3D" parent="race_track/Plane" index="0" unique_id=746307604]
+collision_layer = 3
+
+[node name="CollisionShape3D" parent="race_track/Plane/StaticBody3D" index="0" unique_id=757687535]
+visible = false
+
+[node name="NavigationRegion3D" parent="race_track/Plane" index="1" unique_id=2128555071]
+visible = false
+
+[node name="SpotLight3D" type="SpotLight3D" parent="race_track" unique_id=452364548]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -25.021952, 15.569468, 39.708393)
+light_color = Color(3.411532, 2.2131767, 1.259647, 1)
+light_bake_mode = 1
+shadow_enabled = true
+spot_range = 21.396805
+spot_angle = 60.896015
+
+[node name="FinishLine" type="MeshInstance3D" parent="race_track" unique_id=1570998091]
+transform = Transform3D(0.8436517, -0.010414825, -0.5367897, 0.00041968602, 0.9998243, -0.018739043, 0.5368907, 0.015583945, 0.843508, 6.47577, 1.6183989, 8.8797)
+mesh = SubResource("PlaneMesh_w31q1")
+
+[node name="Replicated" type="Node" parent="." unique_id=56214478]
+
+[node name="Sketchfab_Scene" parent="." unique_id=2043540590 instance=ExtResource("8_1iope")]
+transform = Transform3D(-0.11257046, 0, -0.3261179, 0, 0.34500003, 0, 0.3261179, 0, -0.11257046, -63.85739, 0, 75.69115)
+
+[editable path="race_track"]

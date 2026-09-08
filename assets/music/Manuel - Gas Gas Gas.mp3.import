@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://b6evmrf4tetoc"
+path="res://.godot/imported/Manuel - Gas Gas Gas.mp3-10d1896ff6c5e2ceabe1ff17785d0d52.mp3str"
+
+[deps]
+
+source_file="res://assets/music/Manuel - Gas Gas Gas.mp3"
+dest_files=["res://.godot/imported/Manuel - Gas Gas Gas.mp3-10d1896ff6c5e2ceabe1ff17785d0d52.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

@@ -1,0 +1,90 @@
+[gd_scene load_steps=16 format=3 uid="uid://b647lbs7cpp6s"]
+
+[ext_resource type="Texture2D" uid="uid://8eu7di42ka6q" path="res://assets/textures/oil_puddle.png" id="1_c28u6"]
+[ext_resource type="Script" uid="uid://b1nf6rv6qtv4r" path="res://scripts/hurdles/oil_spill.gd" id="1_g7pyu"]
+[ext_resource type="AudioStream" uid="uid://b3dw0kkiphg3s" path="res://assets/sounds/oil_spill.wav" id="2_cu27h"]
+[ext_resource type="Texture2D" uid="uid://d012nuo14vgo7" path="res://assets/textures/oil_puddle_normal.png" id="2_g7pyu"]
+[ext_resource type="Texture2D" uid="uid://yy2i22pipfy3" path="res://assets/textures/oil_puddle_orm.png" id="3_cu27h"]
+[ext_resource type="Texture2D" uid="uid://bjh767sxr18ve" path="res://assets/textures/cloud_particle.png" id="4_c2whg"]
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_g7pyu"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_vosoq"]
+radius = 1.25
+
+[sub_resource type="Curve" id="Curve_bxgvh"]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.2657581, 1), 0.0, 0.0, 0, 0, Vector2(0.63202727, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 4
+
+[sub_resource type="CurveTexture" id="CurveTexture_umsrf"]
+curve = SubResource("Curve_bxgvh")
+
+[sub_resource type="Curve" id="Curve_1gmyc"]
+_data = [Vector2(0.0017035753, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.4043644), -0.69474417, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_sdvqt"]
+curve = SubResource("Curve_1gmyc")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_yorps"]
+emission_shape = 1
+emission_sphere_radius = 1.0
+gravity = Vector3(0, 1.695, 0)
+scale_min = 2.0
+scale_max = 3.0
+scale_curve = SubResource("CurveTexture_sdvqt")
+alpha_curve = SubResource("CurveTexture_umsrf")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kv28n"]
+transparency = 1
+shading_mode = 0
+disable_ambient_light = true
+disable_specular_occlusion = true
+vertex_color_use_as_albedo = true
+albedo_texture = ExtResource("4_c2whg")
+disable_receive_shadows = true
+billboard_mode = 3
+billboard_keep_scale = true
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="QuadMesh_b7ecy"]
+material = SubResource("StandardMaterial3D_kv28n")
+
+[node name="OilSpillArea" type="Area3D"]
+editor_description = "An oil spill is a \"hurdle\" that is placed by a player and persists until another car drives over it, causing it to slip and slide away. If nobody runs over the spill after a while, it will despawn by itself."
+script = ExtResource("1_g7pyu")
+
+[node name="SpillPlayer" type="AudioStreamPlayer3D" parent="."]
+unique_name_in_owner = true
+stream = ExtResource("2_cu27h")
+max_distance = 10.0
+bus = &"SFX"
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_g7pyu")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_vosoq")
+
+[node name="Decal" type="Decal" parent="."]
+unique_name_in_owner = true
+texture_albedo = ExtResource("1_c28u6")
+texture_normal = ExtResource("2_g7pyu")
+texture_orm = ExtResource("3_cu27h")
+cull_mask = 2
+
+[node name="GPUParticles3D" type="GPUParticles3D" parent="."]
+amount = 16
+lifetime = 2.4
+randomness = 1.0
+visibility_aabb = AABB(-1.6759295, -1.8310609, -1.648312, 3.5096195, 8.215053, 3.3685875)
+process_material = SubResource("ParticleProcessMaterial_yorps")
+draw_pass_1 = SubResource("QuadMesh_b7ecy")
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]
+[connection signal="body_exited" from="." to="." method="_on_body_exited"]

@@ -1,0 +1,133 @@
+[gd_scene load_steps=19 format=3 uid="uid://ges2ci55816s"]
+
+[ext_resource type="Script" uid="uid://2e0c5qvh16j1" path="res://scripts/hurdles/rocket.gd" id="1_s0igh"]
+[ext_resource type="Texture2D" uid="uid://h1qonshqs542" path="res://assets/textures/smoke.png" id="2_7exnu"]
+[ext_resource type="AudioStream" uid="uid://can2r77uj8814" path="res://assets/sounds/rocket_loop.wav" id="2_n1hy1"]
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_7exnu"]
+properties/0/path = NodePath(".:progress")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath("%RocketArea:transform")
+properties/1/spawn = true
+properties/1/replication_mode = 1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_im2cw"]
+size = Vector3(1.25, 1.25, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_im2cw"]
+albedo_color = Color(1, 0.2509804, 0, 1)
+emission = Color(16.568003, 14.373395, 9.612602, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_s0igh"]
+material = SubResource("StandardMaterial3D_im2cw")
+top_radius = 0.075
+bottom_radius = 0.25
+radial_segments = 4
+rings = 0
+
+[sub_resource type="Curve" id="Curve_n1hy1"]
+_data = [Vector2(0, 0), 0.0, 13.783748, 0, 0, Vector2(0.10431655, 1), 0.0, 0.0, 0, 0, Vector2(0.6366907, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 4
+
+[sub_resource type="CurveTexture" id="CurveTexture_qjah5"]
+curve = SubResource("Curve_n1hy1")
+
+[sub_resource type="Gradient" id="Gradient_7exnu"]
+offsets = PackedFloat32Array(0, 0.5443686, 1)
+colors = PackedColorArray(18.892157, 18.892157, 18.892157, 1, 0.12225217, 0.12225226, 0.12225223, 1, 0, 0, 0, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_n1hy1"]
+gradient = SubResource("Gradient_7exnu")
+
+[sub_resource type="Curve" id="Curve_qjah5"]
+_data = [Vector2(0.14086688, 0.9881387), 0.0, 0.0, 0, 0, Vector2(0.57430345, 0), -0.018395972, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_83nvg"]
+curve = SubResource("Curve_qjah5")
+
+[sub_resource type="Curve" id="Curve_83nvg"]
+_data = [Vector2(0.0015479922, 0.14993906), 0.0, 0.80272895, 0, 0, Vector2(0.54334366, 0.4187956), 0.61918426, 0.61918426, 0, 0, Vector2(1, 1), 0.75544906, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_1gub0"]
+curve = SubResource("Curve_83nvg")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_2qqde"]
+lifetime_randomness = 0.2
+emission_shape = 1
+emission_sphere_radius = 0.1
+angle_min = -720.0
+angle_max = 720.0
+direction = Vector3(0, 1, 0)
+spread = 5.0
+initial_velocity_min = 6.0
+initial_velocity_max = 8.0
+gravity = Vector3(0, 0, 0)
+scale_min = 0.7
+scale_max = 0.7
+scale_curve = SubResource("CurveTexture_1gub0")
+color = Color(2.1862855, 2.1862855, 2.1862855, 1)
+color_ramp = SubResource("GradientTexture1D_n1hy1")
+alpha_curve = SubResource("CurveTexture_qjah5")
+emission_curve = SubResource("CurveTexture_83nvg")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vx1cv"]
+transparency = 1
+cull_mode = 2
+specular_mode = 2
+disable_specular_occlusion = true
+vertex_color_use_as_albedo = true
+albedo_color = Color(1, 0.6627451, 0.41960785, 1)
+albedo_texture = ExtResource("2_7exnu")
+disable_receive_shadows = true
+billboard_mode = 3
+billboard_keep_scale = true
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="QuadMesh_7exnu"]
+material = SubResource("StandardMaterial3D_vx1cv")
+size = Vector2(3, 3)
+
+[node name="PathFollow3D" type="PathFollow3D"]
+editor_description = "A rocket is a \"hurdle\" that is launched by a player and goes forward until it meets another car in its path.
+It is a PathFollow3D, which is checked against on the server to spawn it in the right replication bin."
+script = ExtResource("1_s0igh")
+
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("2_n1hy1")
+max_db = 1.0
+autoplay = true
+max_distance = 40.0
+bus = &"SFX"
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_7exnu")
+
+[node name="RocketArea" type="Area3D" parent="."]
+unique_name_in_owner = true
+collision_layer = 0
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RocketArea"]
+shape = SubResource("BoxShape3D_im2cw")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RocketArea/CollisionShape3D"]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0)
+mesh = SubResource("CylinderMesh_s0igh")
+skeleton = NodePath("../../..")
+
+[node name="GPUParticles3D" type="GPUParticles3D" parent="RocketArea/CollisionShape3D/MeshInstance3D"]
+transform = Transform3D(1, 0, 0, 0, -1, 8.742278e-08, 0, -8.742278e-08, -1, 0, -0.81581557, -7.132087e-08)
+amount = 128
+randomness = 1.0
+visibility_aabb = AABB(-1.0935163, -1.0776336, -1.0897077, 2.1897178, 10.004127, 2.1703825)
+process_material = SubResource("ParticleProcessMaterial_2qqde")
+draw_pass_1 = SubResource("QuadMesh_7exnu")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="RocketArea"]
+light_color = Color(1, 0.5372549, 0.3372549, 1)
+omni_range = 2.5

@@ -1,0 +1,86 @@
+[gd_scene load_steps=11 format=3 uid="uid://bsuqarlvk1y3p"]
+
+[ext_resource type="Script" uid="uid://n0r4j6tocdjf" path="res://scripts/powerup.gd" id="1_0gnkw"]
+[ext_resource type="Shader" uid="uid://c6g3uccakr3nu" path="res://assets/shaders/sprite.gdshader" id="1_1ctnv"]
+[ext_resource type="AudioStream" uid="uid://dj32ft41hgim2" path="res://assets/sounds/item.wav" id="2_b5wk5"]
+[ext_resource type="CompressedTexture2DArray" uid="uid://ch048bee7w6wr" path="res://assets/textures/powerup_array.png" id="2_cm63o"]
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_cm63o"]
+properties/0/path = NodePath(".:powerup_id")
+properties/0/spawn = true
+properties/0/replication_mode = 0
+properties/1/path = NodePath(".:visible")
+properties/1/spawn = true
+properties/1/replication_mode = 2
+properties/2/path = NodePath(".:position")
+properties/2/spawn = true
+properties/2/replication_mode = 2
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_75jvp"]
+radius = 1.25
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_d6mqm"]
+render_priority = -1
+transparency = 1
+blend_mode = 1
+cull_mode = 1
+diffuse_mode = 3
+specular_mode = 1
+albedo_color = Color(0.48237866, 0.50730807, 0.9999916, 1)
+metallic = 1.0
+metallic_specular = 1.0
+roughness = 0.1
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_1ctnv"]
+material = SubResource("StandardMaterial3D_d6mqm")
+radius = 0.7
+height = 1.5
+radial_segments = 8
+rings = 0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_cm63o"]
+render_priority = 0
+shader = ExtResource("1_1ctnv")
+shader_parameter/sprites_array = ExtResource("2_cm63o")
+
+[sub_resource type="QuadMesh" id="QuadMesh_0gnkw"]
+
+[node name="PowerupBase" type="Node3D"]
+editor_description = "This node is placed automatically by the server in a level and replicates it to other clients.
+The \"base\" is used as the origin for the placement of this object.
+
+Powerup.TYPE and Powerup.powerup_array are the only variables to change if more powerups need to be added. It is recommended to offload most of the behavior to the powerup itself, so as to not impede in the logic of this class."
+script = ExtResource("1_0gnkw")
+
+[node name="PickupPlayer" type="AudioStreamPlayer3D" parent="."]
+unique_name_in_owner = true
+stream = ExtResource("2_b5wk5")
+volume_db = -5.0
+max_distance = 20.0
+bus = &"SFX"
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_cm63o")
+
+[node name="PowerupArea" type="Area3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6230545, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PowerupArea"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.29478335, 0)
+shape = SubResource("SphereShape3D_75jvp")
+
+[node name="Container" type="MeshInstance3D" parent="PowerupArea"]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 0.8660253, 0.5, 0, -0.5, 0.8660253, 0, 0.29478335, 0)
+mesh = SubResource("CapsuleMesh_1ctnv")
+
+[node name="Sprite" type="MeshInstance3D" parent="PowerupArea"]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32698345, 0)
+material_override = SubResource("ShaderMaterial_cm63o")
+instance_shader_parameters/sprite_index = 0
+mesh = SubResource("QuadMesh_0gnkw")
+
+[connection signal="visibility_changed" from="." to="." method="_on_visibility_changed"]
+[connection signal="body_entered" from="PowerupArea" to="." method="_on_powerup_area_body_entered"]

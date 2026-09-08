@@ -1,0 +1,578 @@
+[gd_scene load_steps=18 format=3 uid="uid://bx8ixkxjeopoc"]
+
+[ext_resource type="AudioStream" uid="uid://bohd15kfcqh68" path="res://assets/sounds/ui_message.wav" id="1_h3405"]
+[ext_resource type="Texture2D" uid="uid://bfn47jugkvxco" path="res://assets/textures/ui/ui_position_quadrant.png" id="1_mrphe"]
+[ext_resource type="AudioStream" uid="uid://kpwfh78p3r2k" path="res://assets/sounds/ui_alert.wav" id="2_vxou2"]
+[ext_resource type="SystemFont" uid="uid://ct034n7reyacb" path="res://assets/fonts/font_gui.tres" id="2_wc2lg"]
+[ext_resource type="AudioStream" uid="uid://c5wnqfv2l7gip" path="res://assets/sounds/ui_lap.wav" id="3_pu6y0"]
+[ext_resource type="Shader" uid="uid://bytu5hu4xnsw4" path="res://assets/shaders/ui_sprite.gdshader" id="3_s3oh0"]
+[ext_resource type="FontFile" uid="uid://cjwm2snl02m8m" path="res://assets/fonts/JetBrainsMono-ExtraBold.ttf" id="3_yjsay"]
+[ext_resource type="CompressedTexture2DArray" uid="uid://ch048bee7w6wr" path="res://assets/textures/powerup_array.png" id="4_8m1nv"]
+
+[sub_resource type="GDScript" id="GDScript_mrphe"]
+resource_name = "gui"
+script/source = "extends Control
+
+var lap_timer := 0.0
+var race_finished := false
+
+@onready var message_label := %MessageLabel
+
+var lobby_player_slot := preload(\"res://assets/scenes/ui/gui_player_slot.tscn\")
+var lap_timer_tscn := preload(\"res://assets/scenes/ui/gui_lap_timer.tscn\")
+
+func show_game_message(text: String):
+	message_label.visible = true
+	message_label.text = text
+	%InGameAnimPlayer.stop()
+	%InGameAnimPlayer.play(\"message_crash_zoom\")
+
+func show_fade_message(text: String):
+	message_label.visible = true
+	message_label.text = text
+	%InGameAnimPlayer.stop()
+	%InGameAnimPlayer.play(\"message_zoom\")
+
+func reset_message():
+	%InGameAnimPlayer.stop()
+	%InGameAnimPlayer.play(\"RESET\")
+
+## Update lap display from controller
+func _update_lap_display(num: int):
+	%LapInfo.text = \"LAP %d\" % num
+	lap_timer = 0.0
+	var new_timer := lap_timer_tscn.instantiate()
+	%LapTimers.add_child(new_timer, false, Node.INTERNAL_MODE_FRONT)
+	%LapTimers.move_child(new_timer, 0)
+	%LapAudioPlayer.play()
+
+## Clear laps
+func _clear_lap_display():
+	for timer in %LapTimers.get_children(true):
+		timer.queue_free()
+
+## Race is finished
+func _finish_race():
+	race_finished = true
+	show_game_message(\"PLACED {0}!\".format([%PositionLabel.text]))
+
+func _update_position(pos: int):
+	%PositionLabel.text = \"#%d\" % pos
+
+func _update_powerup_display(num: int):
+	%PowerupTexture.visible = num >= 0
+	%PowerupTexture.set_instance_shader_parameter(&\"sprite_index\", num)
+
+## GUI response to GameController.player_joined
+func _lobby_add_player(id: int, username: String, color: Color):
+	var slot: PlayerSlotPanel = lobby_player_slot.instantiate()
+	slot.name = str(id)	## Easily find panel with find_child
+	%PlayerSlotContainer.add_child(slot)
+	slot.player_id = id
+	slot.player_name = username
+	slot.player_color = color
+
+## GUI response to GameController.player_list_update
+func _lobby_refresh_players(dict: Dictionary[int, Dictionary]):
+	for ch in %PlayerSlotContainer.get_children(true):
+		ch.queue_free()
+	for k_id in dict:
+		var data := dict[k_id]
+		_lobby_add_player(k_id, data[\"username\"], data[\"color\"])
+
+## GUI response to race being ready
+func _race_ready():
+	_clear_lap_display()
+	%LobbyPanelRoot.visible = false
+	get_tree().create_timer(1.0).timeout.connect(show_fade_message.bind(\"3\"))
+	get_tree().create_timer(2.0).timeout.connect(show_fade_message.bind(\"2\"))
+	get_tree().create_timer(3.0).timeout.connect(show_fade_message.bind(\"1\"))
+	get_tree().create_timer(4.0).timeout.connect(show_game_message.bind(\"GO!\"))
+	get_tree().create_timer(5.0).timeout.connect(func():
+		reset_message()
+		_update_lap_display(1))
+
+## GUI response to race restarting
+func _race_restart():
+	_clear_lap_display()
+	lap_timer = 0.0
+	reset_message()
+	%FinishWrapUpText.visible = false
+	%LobbyPanelRoot.visible = true
+
+## GUI response to race wrapping up before a restart
+func _race_wrapup():
+	%FinishWrapUpText.visible = true
+
+# Called when the node enters the scene tree for the first time.
+func _ready() -> void:
+	GameController.lap_change.connect(_update_lap_display)
+	GameController.powerup_pickup.connect(_update_powerup_display)
+	GameController.race_finished.connect(_finish_race)
+	GameController.position_update.connect(_update_position)
+	GameController.player_joined.connect(_lobby_add_player)
+	GameController.player_list_update.connect(_lobby_refresh_players)
+	GameController.race_ready.connect(_race_ready)
+	GameController.race_wrapup.connect(_race_wrapup)
+	GameController.race_restart.connect(_race_restart)
+	# Only show the start button on the host's screen
+	%HostStartButton.visible = GameController.server
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta: float) -> void:
+	if not race_finished:
+		if %LapTimers.get_child_count(true) > 0:
+			lap_timer += delta
+			var gui_timer := %LapTimers.get_child(0, true)
+			gui_timer.text = \"%d:%02d:%02d\" % [floor(lap_timer / 60.0), fmod(lap_timer, 60.0), fmod(lap_timer * 100.0, 100.0)]
+	
+	# perpetually fix origin for crash zoom
+	if message_label.visible:
+		message_label.pivot_offset = message_label.size * 0.5
+
+## Host wants to start the race
+func _on_host_start_button_pressed() -> void:
+	GameController.race_ready.emit()
+"
+
+[sub_resource type="Animation" id="Animation_ran6c"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MessageLabel:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(1, 1)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("MessageLabel:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0, 313)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("MessageLabel:rotation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [-0.09599311]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("MessageLabel:modulate")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_yjsay"]
+resource_name = "message_crash_zoom"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MessageLabel:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(2, 1),
+"update": 0,
+"values": [Vector2(2.765, 2.765), Vector2(1, 1)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("MessageLabel:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.3, 0.3333333, 0.36666667, 0.40000004, 0.4333334, 0.4666667, 0.5, 0.5333334),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(0, 256), Vector2(0, 255.375), Vector2(-4.5, 264), Vector2(-4.5, 264), Vector2(3.5, 254), Vector2(-2.5, 265), Vector2(-5.5, 257), Vector2(0.5, 260), Vector2(0, 256)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("MessageLabel:rotation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(2, 1),
+"update": 0,
+"values": [-0.17453292519943295, -0.09599311]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("MessageLabel:modulate")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0, 0.26666668),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
+}
+tracks/4/type = "audio"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("%MessageStreamPlayer")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"clips": [{
+"end_offset": 0.0,
+"start_offset": 0.0,
+"stream": ExtResource("1_h3405")
+}],
+"times": PackedFloat32Array(0)
+}
+tracks/4/use_blend = true
+
+[sub_resource type="Animation" id="Animation_8m1nv"]
+resource_name = "message_zoom"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MessageLabel:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.3, 0.73333335, 1),
+"transitions": PackedFloat32Array(2, 1, 1, 1),
+"update": 0,
+"values": [Vector2(2.765, 2.765), Vector2(1, 1), Vector2(1, 1), Vector2(0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("MessageLabel:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.3, 0.73333335),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(0, 256), Vector2(0, 255.375), Vector2(0, 255.375)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("MessageLabel:rotation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.3, 0.73333335),
+"transitions": PackedFloat32Array(2, 1, 1),
+"update": 0,
+"values": [-0.17453292519943295, -0.09599311, -0.09599311]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("MessageLabel:modulate")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0, 0.26666668, 0.73333335, 1),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0)]
+}
+tracks/4/type = "audio"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("%MessageStreamPlayer")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"clips": [{
+"end_offset": 0.0,
+"start_offset": 0.0,
+"stream": ExtResource("2_vxou2")
+}],
+"times": PackedFloat32Array(0.16666667)
+}
+tracks/4/use_blend = true
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_ran6c"]
+_data = {
+&"RESET": SubResource("Animation_ran6c"),
+&"message_crash_zoom": SubResource("Animation_yjsay"),
+&"message_zoom": SubResource("Animation_8m1nv")
+}
+
+[sub_resource type="LabelSettings" id="LabelSettings_1iope"]
+font = ExtResource("2_wc2lg")
+font_size = 90
+stacked_outline_count = 1
+stacked_shadow_count = 1
+stacked_outline_0/size = 30
+stacked_shadow_0/offset = Vector2(9, 9)
+stacked_shadow_0/outline_size = 18
+
+[sub_resource type="Curve2D" id="Curve2D_yjsay"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 1007, 479, 0, 0, 0, 0, 1059, 461, 0, 0, 0, 0, 1101, 520, 0, 0, 0, 0, 1072, 576, 0, 0, 0, 0, 980, 587, 0, 0, 0, 0, 965, 533, 0, 0, 0, 0, 990, 494, 0, 0, 0, 0, 1007, 479)
+}
+point_count = 8
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_8m1nv"]
+shader = ExtResource("3_s3oh0")
+shader_parameter/sprite_array = ExtResource("4_8m1nv")
+
+[sub_resource type="LabelSettings" id="LabelSettings_mrphe"]
+font = ExtResource("3_yjsay")
+font_size = 40
+stacked_outline_count = 1
+stacked_shadow_count = 1
+stacked_outline_0/size = 30
+stacked_shadow_0/offset = Vector2(9, 9)
+stacked_shadow_0/outline_size = 18
+
+[node name="GUIRoot" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_mrphe")
+
+[node name="InGameGUI" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="InGameAnimPlayer" type="AnimationPlayer" parent="InGameGUI"]
+unique_name_in_owner = true
+libraries = {
+&"": SubResource("AnimationLibrary_ran6c")
+}
+
+[node name="TextureRect" type="TextureRect" parent="InGameGUI"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -135.0
+offset_right = 256.0
+grow_vertical = 0
+texture = ExtResource("1_mrphe")
+
+[node name="PositionLabel" type="Label" parent="InGameGUI/TextureRect"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 56.000004
+offset_top = -23.0
+offset_right = 224.0
+offset_bottom = 122.0
+rotation = 0.08726646
+text = "#1"
+label_settings = SubResource("LabelSettings_1iope")
+
+[node name="MapRoot" type="Control" parent="InGameGUI"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -200.0
+offset_top = -200.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="Path2D" type="Path2D" parent="InGameGUI/MapRoot"]
+visible = false
+position = Vector2(-952, -448)
+curve = SubResource("Curve2D_yjsay")
+
+[node name="PowerupRoot" type="Control" parent="InGameGUI"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -200.0
+offset_top = -200.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="PowerupTexture" type="ColorRect" parent="InGameGUI/PowerupRoot"]
+unique_name_in_owner = true
+visible = false
+material = SubResource("ShaderMaterial_8m1nv")
+instance_shader_parameters/sprite_index = 0
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -60.0
+offset_top = -60.0
+offset_right = 60.0
+offset_bottom = 60.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MessageLabel" type="Label" parent="InGameGUI"]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0)
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_top = -11.0
+offset_bottom = 125.00006
+grow_horizontal = 2
+grow_vertical = 2
+rotation = -0.09599311
+text = "FINISH!"
+label_settings = SubResource("LabelSettings_1iope")
+horizontal_alignment = 1
+
+[node name="MessageStreamPlayer" type="AudioStreamPlayer" parent="InGameGUI/MessageLabel"]
+unique_name_in_owner = true
+volume_db = -8.0
+bus = &"GUI"
+
+[node name="LapContainer" type="VBoxContainer" parent="InGameGUI"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -202.0
+offset_right = -29.0
+offset_bottom = 202.0
+grow_horizontal = 0
+theme_override_constants/separation = -9
+
+[node name="LapInfo" type="Label" parent="InGameGUI/LapContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "LAP 1"
+label_settings = SubResource("LabelSettings_1iope")
+horizontal_alignment = 2
+
+[node name="LapAudioPlayer" type="AudioStreamPlayer" parent="InGameGUI/LapContainer/LapInfo"]
+unique_name_in_owner = true
+stream = ExtResource("3_pu6y0")
+volume_db = -15.0
+bus = &"GUI"
+
+[node name="LapTimers" type="VBoxContainer" parent="InGameGUI/LapContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="LobbyPanelRoot" type="Panel" parent="InGameGUI"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -302.0
+offset_top = -252.0
+offset_right = 302.0
+offset_bottom = 252.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PlayerSlotContainer" type="HFlowContainer" parent="InGameGUI/LobbyPanelRoot"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 74.0
+offset_right = -16.0
+offset_bottom = -74.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+alignment = 1
+last_wrap_alignment = 1
+
+[node name="PlayerLobbyTitle" type="Label" parent="InGameGUI/LobbyPanelRoot"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -252.0
+offset_top = 7.0
+offset_right = 252.0
+offset_bottom = 60.0
+grow_horizontal = 2
+text = "Waiting for players.."
+label_settings = SubResource("LabelSettings_mrphe")
+
+[node name="HostStartButton" type="Button" parent="InGameGUI/LobbyPanelRoot"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -53.0
+offset_top = -46.0
+offset_right = 53.0
+offset_bottom = -15.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "START GAME"
+
+[node name="FinishWrapUpText" type="Label" parent="InGameGUI"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -252.0
+offset_top = -80.0
+offset_right = 252.0
+offset_bottom = -27.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "Wrapping up..."
+label_settings = SubResource("LabelSettings_mrphe")
+horizontal_alignment = 1
+
+[connection signal="pressed" from="InGameGUI/LobbyPanelRoot/HostStartButton" to="." method="_on_host_start_button_pressed"]

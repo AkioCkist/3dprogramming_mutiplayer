@@ -1,0 +1,164 @@
+[gd_scene load_steps=25 format=3 uid="uid://b7m87dp0yy0vj"]
+
+[ext_resource type="AudioStream" uid="uid://cl1gnbvm5mkl6" path="res://assets/sounds/explosion.wav" id="1_75x3p"]
+[ext_resource type="Script" uid="uid://blhsqi4k4stst" path="res://scripts/hurdles/explosion.gd" id="1_knj0n"]
+[ext_resource type="Texture2D" uid="uid://bg7p3pndfkgrd" path="res://assets/textures/blob.tres" id="1_ydm58"]
+[ext_resource type="Texture2D" uid="uid://ca7b0510sspk0" path="res://assets/textures/fire.png" id="2_452fg"]
+[ext_resource type="Shader" uid="uid://dqrhsvjc7yhb0" path="res://assets/shaders/shockwave.gdshader" id="5_fuykc"]
+[ext_resource type="Texture2D" uid="uid://lbdgxtwuwypn" path="res://assets/textures/shockwave.png" id="6_ukcmd"]
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_knj0n"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = false
+properties/0/replication_mode = 2
+
+[sub_resource type="Gradient" id="Gradient_ydm58"]
+offsets = PackedFloat32Array(0, 0.1450512, 0.2542662, 0.50341296, 0.66382253, 1)
+colors = PackedColorArray(0, 0, 0, 0, 18.892157, 15.018564, 7.271375, 1, 14.384704, 9.384245, 0, 1, 6.916213, 2.8219776, 0.18353783, 1, 1.2057562, 0.60369456, 0.2746372, 1, 0.70980394, 0.18431373, 0, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_452fg"]
+gradient = SubResource("Gradient_ydm58")
+use_hdr = true
+
+[sub_resource type="Curve" id="Curve_75x3p"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(0.31733745, 0.55505955), -3.004866, -3.004866, 0, 0, Vector2(1, 0), -0.13360071, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_knj0n"]
+curve = SubResource("Curve_75x3p")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_nd1nj"]
+angle_min = -720.0
+angle_max = 720.0
+direction = Vector3(0, 1, 0)
+spread = 70.0
+initial_velocity_max = 7.0
+angular_velocity_min = -10.000016
+angular_velocity_max = 9.999984
+gravity = Vector3(0, -4, 0)
+scale_min = 0.0
+scale_max = 4.0
+scale_curve = SubResource("CurveTexture_knj0n")
+color_ramp = SubResource("GradientTexture1D_452fg")
+sub_emitter_mode = 4
+sub_emitter_amount_at_start = 1
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gea64"]
+transparency = 1
+blend_mode = 1
+cull_mode = 2
+disable_fog = true
+disable_specular_occlusion = true
+vertex_color_use_as_albedo = true
+albedo_texture = ExtResource("2_452fg")
+billboard_mode = 3
+billboard_keep_scale = true
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="QuadMesh_hbq6k"]
+material = SubResource("StandardMaterial3D_gea64")
+size = Vector2(1, 1.5)
+
+[sub_resource type="Gradient" id="Gradient_452fg"]
+offsets = PackedFloat32Array(0, 0.21672355, 0.43515357, 1)
+colors = PackedColorArray(3.20028, 3.18694, 2.7867417, 1, 4.7064786, 4.7064786, 2.0162277, 1, 0.87058824, 0.34509805, 0.07450981, 1, 0.84705883, 0.22352941, 0.16862746, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_75x3p"]
+gradient = SubResource("Gradient_452fg")
+
+[sub_resource type="Curve" id="Curve_452fg"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), -2.1517239, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_75x3p"]
+curve = SubResource("Curve_452fg")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_knj0n"]
+direction = Vector3(0, 1, 0)
+initial_velocity_max = 6.0
+gravity = Vector3(0, -5, 0)
+scale_min = 0.0
+scale_max = 5.0
+scale_curve = SubResource("CurveTexture_75x3p")
+color_ramp = SubResource("GradientTexture1D_75x3p")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fuykc"]
+blend_mode = 1
+cull_mode = 2
+disable_ambient_light = true
+disable_fog = true
+disable_specular_occlusion = true
+vertex_color_use_as_albedo = true
+albedo_texture = ExtResource("1_ydm58")
+emission_enabled = true
+emission = Color(0.37036446, 0.3703645, 0.37036446, 1)
+use_particle_trails = true
+
+[sub_resource type="RibbonTrailMesh" id="RibbonTrailMesh_ukcmd"]
+material = SubResource("StandardMaterial3D_fuykc")
+shape = 0
+size = 0.02
+section_length = 0.19
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_452fg"]
+radius = 4.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ukcmd"]
+render_priority = 0
+shader = ExtResource("5_fuykc")
+shader_parameter/albedo_emission = ExtResource("6_ukcmd")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_nd1nj"]
+material = SubResource("ShaderMaterial_ukcmd")
+size = Vector2(8, 8)
+
+[node name="Explosion" type="Area3D"]
+editor_description = "TODO: Make it look better"
+monitorable = false
+script = ExtResource("1_knj0n")
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_knj0n")
+
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
+unique_name_in_owner = true
+stream = ExtResource("1_75x3p")
+unit_size = 2.0
+autoplay = true
+max_distance = 30.0
+bus = &"SFX"
+
+[node name="ParticlesExp" type="GPUParticles3D" parent="."]
+unique_name_in_owner = true
+emitting = false
+amount = 32
+sub_emitter = NodePath("../ParticlesTrails")
+one_shot = true
+explosiveness = 0.9
+interpolate = false
+visibility_aabb = AABB(-3.8161664, -3.4987526, -4.9048796, 8.310131, 7.5954704, 10.208199)
+process_material = SubResource("ParticleProcessMaterial_nd1nj")
+draw_pass_1 = SubResource("QuadMesh_hbq6k")
+
+[node name="ParticlesTrails" type="GPUParticles3D" parent="."]
+emitting = false
+amount = 16
+lifetime = 2.0
+one_shot = true
+preprocess = 0.3
+explosiveness = 1.0
+interpolate = false
+trail_enabled = true
+process_material = SubResource("ParticleProcessMaterial_knj0n")
+draw_pass_1 = SubResource("RibbonTrailMesh_ukcmd")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+unique_name_in_owner = true
+shape = SubResource("SphereShape3D_452fg")
+
+[node name="ShockwaveMesh" type="MeshInstance3D" parent="."]
+unique_name_in_owner = true
+instance_shader_parameters/alpha_mod = 1.0
+mesh = SubResource("PlaneMesh_nd1nj")

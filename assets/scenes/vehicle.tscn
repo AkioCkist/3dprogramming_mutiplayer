@@ -1,0 +1,163 @@
+[gd_scene load_steps=11 format=3 uid="uid://i11ncmcknpxw"]
+
+[ext_resource type="Script" uid="uid://v6xjp3dj02bw" path="res://scripts/vehicle.gd" id="1_p3ifn"]
+[ext_resource type="AudioStream" uid="uid://bejouyjjqleqk" path="res://assets/sounds/veh_jetloop.wav" id="2_eakmo"]
+[ext_resource type="AudioStream" uid="uid://cc65611fafxjw" path="res://assets/sounds/veh_squeal.wav" id="3_1cv17"]
+[ext_resource type="PackedScene" uid="uid://cuen114wc6n5e" path="res://assets/models/vehicle_hull.blend" id="3_lp5bx"]
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_80v2j"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:engine_force")
+properties/1/spawn = true
+properties/1/replication_mode = 2
+properties/2/path = NodePath(".:steering")
+properties/2/spawn = true
+properties/2/replication_mode = 2
+properties/3/path = NodePath(".:linear_velocity")
+properties/3/spawn = true
+properties/3/replication_mode = 1
+properties/4/path = NodePath(".:angular_velocity")
+properties/4/spawn = true
+properties/4/replication_mode = 1
+properties/5/path = NodePath(".:rotation")
+properties/5/spawn = true
+properties/5/replication_mode = 1
+properties/6/path = NodePath(".:username")
+properties/6/spawn = true
+properties/6/replication_mode = 0
+properties/7/path = NodePath(".:color")
+properties/7/spawn = true
+properties/7/replication_mode = 0
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_80v2j"]
+size = Vector3(1.1, 0.3397461, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1cv17"]
+resource_local_to_scene = true
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_lp5bx"]
+size = Vector3(0.798584, 0.4416748, 0.9352417)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lp5bx"]
+albedo_color = Color(0.14406255, 0.14406255, 0.14406255, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_eakmo"]
+top_radius = 0.3
+bottom_radius = 0.3
+height = 0.185
+
+[node name="VehicleBody3D" type="VehicleBody3D"]
+mass = 1000.0
+center_of_mass_mode = 1
+center_of_mass = Vector3(0, -0.2443206, 0.17847759)
+contact_monitor = true
+max_contacts_reported = 1
+script = ExtResource("1_p3ifn")
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_80v2j")
+
+[node name="UsernameLabel" type="Label3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.99097645, 0)
+billboard = 1
+text = "Username"
+font_size = 80
+outline_size = 20
+
+[node name="CenterOfMassDummy" type="Node3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.14434385, -0.17045599)
+
+[node name="EnginePlayer" type="AudioStreamPlayer3D" parent="."]
+unique_name_in_owner = true
+stream = ExtResource("2_eakmo")
+max_db = -10.0
+autoplay = true
+max_distance = 16.0
+bus = &"SFX"
+
+[node name="SquealPlayer" type="AudioStreamPlayer3D" parent="."]
+unique_name_in_owner = true
+stream = ExtResource("3_1cv17")
+max_db = 0.0
+max_distance = 16.0
+bus = &"SFX"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.14911722, 0)
+shape = SubResource("BoxShape3D_80v2j")
+
+[node name="vehicle_hull" parent="CollisionShape3D" instance=ExtResource("3_lp5bx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.061137006, 0)
+
+[node name="hull_mesh" parent="CollisionShape3D/vehicle_hull" index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_1cv17")
+
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.21292517, 0.19802856)
+shape = SubResource("BoxShape3D_lp5bx")
+
+[node name="RHindWheel" type="VehicleWheel3D" parent="."]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0.66704273, -0.23114872, 0.7)
+engine_force = 30.0
+brake = 30.0
+use_as_traction = true
+wheel_roll_influence = 0.5
+wheel_radius = 0.3
+wheel_friction_slip = 3.0
+suspension_stiffness = 70.0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RHindWheel"]
+transform = Transform3D(-4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0, 1, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_lp5bx")
+mesh = SubResource("CylinderMesh_eakmo")
+
+[node name="RFrontWheel" type="VehicleWheel3D" parent="."]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0.66704273, -0.23114872, -0.7)
+engine_force = 30.0
+brake = 30.0
+use_as_steering = true
+wheel_roll_influence = 0.5
+wheel_radius = 0.3
+wheel_friction_slip = 4.0
+suspension_stiffness = 70.0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RFrontWheel"]
+transform = Transform3D(-4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0, 1, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_lp5bx")
+mesh = SubResource("CylinderMesh_eakmo")
+
+[node name="LHindWheel" type="VehicleWheel3D" parent="."]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -0.667, -0.23114872, 0.7)
+engine_force = 30.0
+brake = 30.0
+use_as_traction = true
+wheel_roll_influence = 0.5
+wheel_radius = 0.3
+wheel_friction_slip = 3.0
+suspension_stiffness = 70.0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="LHindWheel"]
+transform = Transform3D(-4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0, 1, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_lp5bx")
+mesh = SubResource("CylinderMesh_eakmo")
+
+[node name="LFrontWheel" type="VehicleWheel3D" parent="."]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -0.667, -0.23114872, -0.7)
+engine_force = 30.0
+brake = 30.0
+use_as_steering = true
+wheel_roll_influence = 0.5
+wheel_radius = 0.3
+wheel_friction_slip = 4.0
+suspension_stiffness = 70.0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="LFrontWheel"]
+transform = Transform3D(-4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0, 1, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_lp5bx")
+mesh = SubResource("CylinderMesh_eakmo")
+
+[editable path="CollisionShape3D/vehicle_hull"]

@@ -1,0 +1,400 @@
+[gd_scene load_steps=7 format=3 uid="uid://du6jn3welhhay"]
+
+[ext_resource type="SystemFont" uid="uid://ct034n7reyacb" path="res://assets/fonts/font_gui.tres" id="1_ubd4l"]
+[ext_resource type="FontFile" uid="uid://cjwm2snl02m8m" path="res://assets/fonts/JetBrainsMono-ExtraBold.ttf" id="2_3g0x6"]
+
+[sub_resource type="GDScript" id="GDScript_ubd4l"]
+resource_name = "gui_menu"
+script/source = "extends Control
+
+func go_to_menu(path: NodePath):
+	var menu := get_node(path)
+	assert(menu.unique_name_in_owner, \"Must navigate to menu with unique name\")
+	if menu is Control:
+		%MainMenu.visible = false
+		menu.visible = true
+
+## TODO: Use host settings to setup game before launch
+func start_local_game(is_server: bool):
+	GameController.config.save_to_path()
+	GameController.server = is_server
+	var game_tscn := preload(\"res://assets/scenes/race_scene.tscn\")
+	get_tree().change_scene_to_packed(game_tscn)
+
+## Quit requested
+func _on_button_quit_pressed() -> void:
+	get_tree().quit(0)
+
+## A screen wants to come back to the main menu
+func _on_button_back_pressed(source: Control) -> void:
+	if source.has_meta(\"gui_menu\"):
+		var gui: NodePath = source.get_meta(\"gui_menu\")
+		var control = source.get_node(gui)
+		if control is Control:
+			control.visible = false
+		%MainMenu.visible = true
+
+## Show multiplayer host setup menu
+func _on_button_host_pressed() -> void:
+	go_to_menu(\"%HostMenu\")
+
+## Show remote game join menu
+func _on_button_join_pressed() -> void:
+	go_to_menu(\"%JoinMenu\")
+
+## Start a singleplayer game (choose track?)
+func _on_button_play_pressed() -> void:
+	start_local_game(true)
+
+## Host menu wants to start hosting
+func _on_button_host_enter_pressed() -> void:
+	start_local_game(true)
+
+## Join menu wants to start joining
+func _on_button_join_enter_pressed() -> void:
+	start_local_game(false)
+
+## Wants to join local game (another instance is hosting on the same machine)
+func _on_button_join_local_pressed() -> void:
+	GameController.local_override = true
+	start_local_game(false)
+
+var is_joining := false
+
+## Dump mutable fields back into the configuration singleton
+func dump_gui_to_config():
+	GameController.config.settings_address = %JoinAddrEdit.text
+	GameController.config.settings_username = %PlayerNameEdit.text if is_joining else %HostPlayerNameEdit.text
+	GameController.config.settings_color = %JoinColorPicker.color if is_joining else %HostColorPicker.color
+	GameController.config.settings_maxplayers = %MaxPlayersEdit.value
+
+## Join menu is displaying
+func _on_join_menu_visibility_changed(source: Control) -> void:
+	if source.visible:
+		is_joining = true
+		GameController.local_override = false
+		%PlayerNameEdit.text = GameController.config.settings_username
+		%JoinAddrEdit.text = GameController.config.settings_address
+		%JoinColorPicker.color = GameController.config.settings_color
+	else:
+		dump_gui_to_config()
+
+## Host menu is displaying
+func _on_host_menu_visibility_changed(source: Control) -> void:
+	if source.visible:
+		is_joining = false
+		GameController.local_override = false
+		%MaxPlayersEdit.value = GameController.config.settings_maxplayers
+		%HostPlayerNameEdit.text = GameController.config.settings_username
+		%HostColorPicker.color = GameController.config.settings_color
+	else:
+		dump_gui_to_config()
+
+## Save config to singleton
+func _exit_tree() -> void:
+	dump_gui_to_config()
+"
+
+[sub_resource type="LabelSettings" id="LabelSettings_3g0x6"]
+font = ExtResource("1_ubd4l")
+font_size = 90
+stacked_outline_count = 1
+stacked_shadow_count = 1
+stacked_outline_0/size = 30
+stacked_shadow_0/offset = Vector2(9, 9)
+stacked_shadow_0/outline_size = 18
+
+[sub_resource type="LabelSettings" id="LabelSettings_0wyop"]
+shadow_color = Color(0, 0, 0, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_3fsyd"]
+font = ExtResource("2_3g0x6")
+font_size = 40
+stacked_outline_count = 1
+stacked_shadow_count = 1
+stacked_outline_0/size = 30
+stacked_shadow_0/offset = Vector2(9, 9)
+stacked_shadow_0/outline_size = 18
+
+[node name="GUIRoot" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_ubd4l")
+
+[node name="GameTitleAlways" type="Label" parent="."]
+layout_mode = 0
+offset_left = 58.0
+offset_top = 26.0
+offset_right = 826.0
+offset_bottom = 162.0
+text = "UNTITLED RACING GAME"
+label_settings = SubResource("LabelSettings_3g0x6")
+horizontal_alignment = 2
+
+[node name="MainMenu" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainMenu"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 57.0
+offset_top = -450.0
+offset_right = 329.0
+offset_bottom = -39.0
+grow_vertical = 0
+alignment = 2
+
+[node name="ButtonPlay" type="Button" parent="MainMenu/VBoxContainer"]
+layout_mode = 2
+text = "SINGLEPLAYER"
+
+[node name="ButtonHost" type="Button" parent="MainMenu/VBoxContainer"]
+layout_mode = 2
+text = "HOST CHAMPIONSHIP"
+
+[node name="ButtonJoin" type="Button" parent="MainMenu/VBoxContainer"]
+layout_mode = 2
+text = "JOIN CHAMPIONSHIP"
+
+[node name="ButtonCustomize" type="Button" parent="MainMenu/VBoxContainer"]
+layout_mode = 2
+text = "CUSTOMIZE"
+
+[node name="ButtonOptions" type="Button" parent="MainMenu/VBoxContainer"]
+layout_mode = 2
+text = "OPTIONS"
+
+[node name="Spacer" type="Control" parent="MainMenu/VBoxContainer"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="ButtonQuit" type="Button" parent="MainMenu/VBoxContainer"]
+layout_mode = 2
+text = "QUIT"
+
+[node name="Label" type="Label" parent="MainMenu"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -327.0
+offset_top = -87.0
+offset_right = -59.0
+offset_bottom = -34.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "Sound effects and music from
+Freesound.org CC0 and Royalty Free discs"
+label_settings = SubResource("LabelSettings_0wyop")
+
+[node name="JoinMenu" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Subtitle" type="Label" parent="JoinMenu"]
+layout_mode = 0
+offset_left = 59.0
+offset_top = 165.0
+offset_right = 227.0
+offset_bottom = 218.0
+text = "Join multiplayer game"
+label_settings = SubResource("LabelSettings_3fsyd")
+horizontal_alignment = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="JoinMenu"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -165.0
+offset_top = -364.0
+offset_right = 165.0
+offset_bottom = -90.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Label" type="Label" parent="JoinMenu/VBoxContainer"]
+layout_mode = 2
+text = "Username and color:"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="JoinMenu/VBoxContainer"]
+layout_mode = 2
+
+[node name="PlayerNameEdit" type="LineEdit" parent="JoinMenu/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Player"
+placeholder_text = "Username must not be empty"
+
+[node name="JoinColorPicker" type="ColorPickerButton" parent="JoinMenu/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 32)
+layout_mode = 2
+edit_alpha = false
+edit_intensity = false
+
+[node name="Spacer2" type="Control" parent="JoinMenu/VBoxContainer"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="Label2" type="Label" parent="JoinMenu/VBoxContainer"]
+layout_mode = 2
+text = "Hostname of game:"
+
+[node name="JoinAddrEdit" type="LineEdit" parent="JoinMenu/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "IP address or domain"
+
+[node name="Spacer" type="Control" parent="JoinMenu/VBoxContainer"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="ButtonJoin" type="Button" parent="JoinMenu/VBoxContainer"]
+layout_mode = 2
+text = "JOIN LOBBY"
+
+[node name="Spacer3" type="Control" parent="JoinMenu/VBoxContainer"]
+custom_minimum_size = Vector2(0, 40.825)
+layout_mode = 2
+
+[node name="ButtonJoinLocal" type="Button" parent="JoinMenu/VBoxContainer"]
+layout_mode = 2
+text = "JOIN LOCALLY HOSTED LOBBY"
+
+[node name="ButtonBack" type="Button" parent="JoinMenu"]
+layout_mode = 0
+offset_left = 53.0
+offset_top = 237.0
+offset_right = 126.0
+offset_bottom = 270.0
+text = "GO BACK"
+metadata/gui_menu = NodePath("..")
+
+[node name="HostMenu" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Subtitle" type="Label" parent="HostMenu"]
+layout_mode = 0
+offset_left = 59.0
+offset_top = 165.0
+offset_right = 563.0
+offset_bottom = 218.0
+text = "Host multiplayer game"
+label_settings = SubResource("LabelSettings_3fsyd")
+horizontal_alignment = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HostMenu"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 53.0
+offset_top = -466.0
+offset_right = 383.0
+offset_bottom = -50.0
+grow_vertical = 0
+alignment = 2
+
+[node name="Label" type="Label" parent="HostMenu/VBoxContainer"]
+layout_mode = 2
+text = "Max players"
+
+[node name="MaxPlayersEdit" type="SpinBox" parent="HostMenu/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 20.0
+value = 4.0
+alignment = 1
+suffix = " players"
+
+[node name="Spacer" type="Control" parent="HostMenu/VBoxContainer"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="Label3" type="Label" parent="HostMenu/VBoxContainer"]
+layout_mode = 2
+text = "Username and color:"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HostMenu/VBoxContainer"]
+layout_mode = 2
+
+[node name="HostPlayerNameEdit" type="LineEdit" parent="HostMenu/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Player"
+placeholder_text = "Username must not be empty"
+
+[node name="HostColorPicker" type="ColorPickerButton" parent="HostMenu/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 32)
+layout_mode = 2
+edit_alpha = false
+edit_intensity = false
+
+[node name="ButtonHost" type="Button" parent="HostMenu"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -386.0
+offset_top = -83.0
+offset_right = -56.0
+offset_bottom = -50.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "START MULTIPLAYER GAME"
+
+[node name="ButtonBack" type="Button" parent="HostMenu"]
+layout_mode = 0
+offset_left = 53.0
+offset_top = 237.0
+offset_right = 126.0
+offset_bottom = 270.0
+text = "GO BACK"
+metadata/gui_menu = NodePath("..")
+
+[connection signal="pressed" from="MainMenu/VBoxContainer/ButtonPlay" to="." method="_on_button_play_pressed"]
+[connection signal="pressed" from="MainMenu/VBoxContainer/ButtonHost" to="." method="_on_button_host_pressed"]
+[connection signal="pressed" from="MainMenu/VBoxContainer/ButtonJoin" to="." method="_on_button_join_pressed"]
+[connection signal="pressed" from="MainMenu/VBoxContainer/ButtonQuit" to="." method="_on_button_quit_pressed"]
+[connection signal="visibility_changed" from="JoinMenu" to="." method="_on_join_menu_visibility_changed" flags=18]
+[connection signal="pressed" from="JoinMenu/VBoxContainer/ButtonJoin" to="." method="_on_button_join_enter_pressed"]
+[connection signal="pressed" from="JoinMenu/VBoxContainer/ButtonJoinLocal" to="." method="_on_button_join_local_pressed"]
+[connection signal="pressed" from="JoinMenu/ButtonBack" to="." method="_on_button_back_pressed" flags=18]
+[connection signal="visibility_changed" from="HostMenu" to="." method="_on_host_menu_visibility_changed" flags=18]
+[connection signal="pressed" from="HostMenu/ButtonHost" to="." method="_on_button_host_enter_pressed"]
+[connection signal="pressed" from="HostMenu/ButtonBack" to="." method="_on_button_back_pressed" flags=18]
