@@ -117,6 +117,9 @@ func _ready() -> void:
 	GameController.race_restart.connect(_race_restart)
 	# Only show the start button on the host's screen
 	%HostStartButton.visible = GameController.server
+	# Singleplayer skips the lobby wait and starts the race right away
+	if GameController.autostart and GameController.server:
+		GameController.race_ready.emit.call_deferred()
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:

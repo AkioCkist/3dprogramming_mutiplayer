@@ -80,6 +80,7 @@ func client_send_player_list(dict: Dictionary[int, Dictionary]):
 # Game configuration
 var server := false
 var local_override := false
+var autostart := false
 
 var config := GameConfig.create()
 

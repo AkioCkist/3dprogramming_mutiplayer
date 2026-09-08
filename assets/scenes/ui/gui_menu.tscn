@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://du6jn3welhhay"]
+[gd_scene format=3 uid="uid://du6jn3welhhay"]
 
 [ext_resource type="SystemFont" uid="uid://ct034n7reyacb" path="res://assets/fonts/font_gui.tres" id="1_ubd4l"]
 [ext_resource type="FontFile" uid="uid://cjwm2snl02m8m" path="res://assets/fonts/JetBrainsMono-ExtraBold.ttf" id="2_3g0x6"]
@@ -44,19 +44,23 @@ func _on_button_join_pressed() -> void:
 
 ## Start a singleplayer game (choose track?)
 func _on_button_play_pressed() -> void:
+	GameController.autostart = true
 	start_local_game(true)
 
 ## Host menu wants to start hosting
 func _on_button_host_enter_pressed() -> void:
+	GameController.autostart = false
 	start_local_game(true)
 
 ## Join menu wants to start joining
 func _on_button_join_enter_pressed() -> void:
+	GameController.autostart = false
 	start_local_game(false)
 
 ## Wants to join local game (another instance is hosting on the same machine)
 func _on_button_join_local_pressed() -> void:
 	GameController.local_override = true
+	GameController.autostart = false
 	start_local_game(false)
 
 var is_joining := false
@@ -104,9 +108,6 @@ stacked_outline_0/size = 30
 stacked_shadow_0/offset = Vector2(9, 9)
 stacked_shadow_0/outline_size = 18
 
-[sub_resource type="LabelSettings" id="LabelSettings_0wyop"]
-shadow_color = Color(0, 0, 0, 1)
-
 [sub_resource type="LabelSettings" id="LabelSettings_3fsyd"]
 font = ExtResource("2_3g0x6")
 font_size = 40
@@ -116,7 +117,7 @@ stacked_outline_0/size = 30
 stacked_shadow_0/offset = Vector2(9, 9)
 stacked_shadow_0/outline_size = 18
 
-[node name="GUIRoot" type="Control"]
+[node name="GUIRoot" type="Control" unique_id=1504866522]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -125,7 +126,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = SubResource("GDScript_ubd4l")
 
-[node name="GameTitleAlways" type="Label" parent="."]
+[node name="GameTitleAlways" type="Label" parent="." unique_id=1617023414]
 layout_mode = 0
 offset_left = 58.0
 offset_top = 26.0
@@ -135,7 +136,7 @@ text = "UNTITLED RACING GAME"
 label_settings = SubResource("LabelSettings_3g0x6")
 horizontal_alignment = 2
 
-[node name="MainMenu" type="Control" parent="."]
+[node name="MainMenu" type="Control" parent="." unique_id=85385736]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -144,7 +145,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MainMenu"]
+[node name="VBoxContainer" type="VBoxContainer" parent="MainMenu" unique_id=1990799500]
 layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
@@ -156,52 +157,27 @@ offset_bottom = -39.0
 grow_vertical = 0
 alignment = 2
 
-[node name="ButtonPlay" type="Button" parent="MainMenu/VBoxContainer"]
+[node name="ButtonPlay" type="Button" parent="MainMenu/VBoxContainer" unique_id=258733360]
 layout_mode = 2
 text = "SINGLEPLAYER"
 
-[node name="ButtonHost" type="Button" parent="MainMenu/VBoxContainer"]
+[node name="ButtonHost" type="Button" parent="MainMenu/VBoxContainer" unique_id=462680748]
 layout_mode = 2
 text = "HOST CHAMPIONSHIP"
 
-[node name="ButtonJoin" type="Button" parent="MainMenu/VBoxContainer"]
+[node name="ButtonJoin" type="Button" parent="MainMenu/VBoxContainer" unique_id=932053148]
 layout_mode = 2
 text = "JOIN CHAMPIONSHIP"
 
-[node name="ButtonCustomize" type="Button" parent="MainMenu/VBoxContainer"]
-layout_mode = 2
-text = "CUSTOMIZE"
-
-[node name="ButtonOptions" type="Button" parent="MainMenu/VBoxContainer"]
-layout_mode = 2
-text = "OPTIONS"
-
-[node name="Spacer" type="Control" parent="MainMenu/VBoxContainer"]
+[node name="Spacer" type="Control" parent="MainMenu/VBoxContainer" unique_id=1228571912]
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 
-[node name="ButtonQuit" type="Button" parent="MainMenu/VBoxContainer"]
+[node name="ButtonQuit" type="Button" parent="MainMenu/VBoxContainer" unique_id=1724005758]
 layout_mode = 2
 text = "QUIT"
 
-[node name="Label" type="Label" parent="MainMenu"]
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -327.0
-offset_top = -87.0
-offset_right = -59.0
-offset_bottom = -34.0
-grow_horizontal = 0
-grow_vertical = 0
-text = "Sound effects and music from
-Freesound.org CC0 and Royalty Free discs"
-label_settings = SubResource("LabelSettings_0wyop")
-
-[node name="JoinMenu" type="Control" parent="."]
+[node name="JoinMenu" type="Control" parent="." unique_id=294401237]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
@@ -211,7 +187,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Subtitle" type="Label" parent="JoinMenu"]
+[node name="Subtitle" type="Label" parent="JoinMenu" unique_id=1417606287]
 layout_mode = 0
 offset_left = 59.0
 offset_top = 165.0
@@ -221,7 +197,7 @@ text = "Join multiplayer game"
 label_settings = SubResource("LabelSettings_3fsyd")
 horizontal_alignment = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="JoinMenu"]
+[node name="VBoxContainer" type="VBoxContainer" parent="JoinMenu" unique_id=1644320521]
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -235,57 +211,57 @@ offset_bottom = -90.0
 grow_horizontal = 2
 grow_vertical = 0
 
-[node name="Label" type="Label" parent="JoinMenu/VBoxContainer"]
+[node name="Label" type="Label" parent="JoinMenu/VBoxContainer" unique_id=1776000785]
 layout_mode = 2
 text = "Username and color:"
 
-[node name="HBoxContainer" type="HBoxContainer" parent="JoinMenu/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="JoinMenu/VBoxContainer" unique_id=339823057]
 layout_mode = 2
 
-[node name="PlayerNameEdit" type="LineEdit" parent="JoinMenu/VBoxContainer/HBoxContainer"]
+[node name="PlayerNameEdit" type="LineEdit" parent="JoinMenu/VBoxContainer/HBoxContainer" unique_id=1877649038]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Player"
 placeholder_text = "Username must not be empty"
 
-[node name="JoinColorPicker" type="ColorPickerButton" parent="JoinMenu/VBoxContainer/HBoxContainer"]
+[node name="JoinColorPicker" type="ColorPickerButton" parent="JoinMenu/VBoxContainer/HBoxContainer" unique_id=1639662979]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(64, 32)
 layout_mode = 2
 edit_alpha = false
 edit_intensity = false
 
-[node name="Spacer2" type="Control" parent="JoinMenu/VBoxContainer"]
+[node name="Spacer2" type="Control" parent="JoinMenu/VBoxContainer" unique_id=695103873]
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 
-[node name="Label2" type="Label" parent="JoinMenu/VBoxContainer"]
+[node name="Label2" type="Label" parent="JoinMenu/VBoxContainer" unique_id=1387486090]
 layout_mode = 2
 text = "Hostname of game:"
 
-[node name="JoinAddrEdit" type="LineEdit" parent="JoinMenu/VBoxContainer"]
+[node name="JoinAddrEdit" type="LineEdit" parent="JoinMenu/VBoxContainer" unique_id=430431918]
 unique_name_in_owner = true
 layout_mode = 2
 placeholder_text = "IP address or domain"
 
-[node name="Spacer" type="Control" parent="JoinMenu/VBoxContainer"]
+[node name="Spacer" type="Control" parent="JoinMenu/VBoxContainer" unique_id=1053305266]
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 
-[node name="ButtonJoin" type="Button" parent="JoinMenu/VBoxContainer"]
+[node name="ButtonJoin" type="Button" parent="JoinMenu/VBoxContainer" unique_id=352577661]
 layout_mode = 2
 text = "JOIN LOBBY"
 
-[node name="Spacer3" type="Control" parent="JoinMenu/VBoxContainer"]
+[node name="Spacer3" type="Control" parent="JoinMenu/VBoxContainer" unique_id=1951561490]
 custom_minimum_size = Vector2(0, 40.825)
 layout_mode = 2
 
-[node name="ButtonJoinLocal" type="Button" parent="JoinMenu/VBoxContainer"]
+[node name="ButtonJoinLocal" type="Button" parent="JoinMenu/VBoxContainer" unique_id=2034139686]
 layout_mode = 2
 text = "JOIN LOCALLY HOSTED LOBBY"
 
-[node name="ButtonBack" type="Button" parent="JoinMenu"]
+[node name="ButtonBack" type="Button" parent="JoinMenu" unique_id=1585032591]
 layout_mode = 0
 offset_left = 53.0
 offset_top = 237.0
@@ -294,7 +270,7 @@ offset_bottom = 270.0
 text = "GO BACK"
 metadata/gui_menu = NodePath("..")
 
-[node name="HostMenu" type="Control" parent="."]
+[node name="HostMenu" type="Control" parent="." unique_id=449274980]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
@@ -304,7 +280,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Subtitle" type="Label" parent="HostMenu"]
+[node name="Subtitle" type="Label" parent="HostMenu" unique_id=35394665]
 layout_mode = 0
 offset_left = 59.0
 offset_top = 165.0
@@ -314,7 +290,7 @@ text = "Host multiplayer game"
 label_settings = SubResource("LabelSettings_3fsyd")
 horizontal_alignment = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="HostMenu"]
+[node name="VBoxContainer" type="VBoxContainer" parent="HostMenu" unique_id=147647604]
 layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
@@ -326,11 +302,11 @@ offset_bottom = -50.0
 grow_vertical = 0
 alignment = 2
 
-[node name="Label" type="Label" parent="HostMenu/VBoxContainer"]
+[node name="Label" type="Label" parent="HostMenu/VBoxContainer" unique_id=1280938950]
 layout_mode = 2
 text = "Max players"
 
-[node name="MaxPlayersEdit" type="SpinBox" parent="HostMenu/VBoxContainer"]
+[node name="MaxPlayersEdit" type="SpinBox" parent="HostMenu/VBoxContainer" unique_id=1512748266]
 unique_name_in_owner = true
 layout_mode = 2
 max_value = 20.0
@@ -338,32 +314,32 @@ value = 4.0
 alignment = 1
 suffix = " players"
 
-[node name="Spacer" type="Control" parent="HostMenu/VBoxContainer"]
+[node name="Spacer" type="Control" parent="HostMenu/VBoxContainer" unique_id=695841915]
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 
-[node name="Label3" type="Label" parent="HostMenu/VBoxContainer"]
+[node name="Label3" type="Label" parent="HostMenu/VBoxContainer" unique_id=1870805096]
 layout_mode = 2
 text = "Username and color:"
 
-[node name="HBoxContainer" type="HBoxContainer" parent="HostMenu/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="HostMenu/VBoxContainer" unique_id=1252782784]
 layout_mode = 2
 
-[node name="HostPlayerNameEdit" type="LineEdit" parent="HostMenu/VBoxContainer/HBoxContainer"]
+[node name="HostPlayerNameEdit" type="LineEdit" parent="HostMenu/VBoxContainer/HBoxContainer" unique_id=2101582806]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Player"
 placeholder_text = "Username must not be empty"
 
-[node name="HostColorPicker" type="ColorPickerButton" parent="HostMenu/VBoxContainer/HBoxContainer"]
+[node name="HostColorPicker" type="ColorPickerButton" parent="HostMenu/VBoxContainer/HBoxContainer" unique_id=1690746533]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(64, 32)
 layout_mode = 2
 edit_alpha = false
 edit_intensity = false
 
-[node name="ButtonHost" type="Button" parent="HostMenu"]
+[node name="ButtonHost" type="Button" parent="HostMenu" unique_id=396183895]
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
@@ -378,7 +354,7 @@ grow_horizontal = 0
 grow_vertical = 0
 text = "START MULTIPLAYER GAME"
 
-[node name="ButtonBack" type="Button" parent="HostMenu"]
+[node name="ButtonBack" type="Button" parent="HostMenu" unique_id=1940223944]
 layout_mode = 0
 offset_left = 53.0
 offset_top = 237.0
