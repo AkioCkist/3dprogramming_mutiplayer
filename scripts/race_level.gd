@@ -13,7 +13,7 @@ class_name RaceLevel
 @export var replication_bin: Node = null
 
 @export_group("Gameplay")
-@export var lap_count := 3
+@export var lap_count := 1
 @export var music: AudioStreamPlayer
 
 var checkpoint_tscn := preload("res://assets/scenes/checkpoint.tscn")

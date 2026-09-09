@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://bx8ixkxjeopoc"]
+[gd_scene format=3 uid="uid://bx8ixkxjeopoc"]
 
 [ext_resource type="AudioStream" uid="uid://bohd15kfcqh68" path="res://assets/sounds/ui_message.wav" id="1_h3405"]
 [ext_resource type="Texture2D" uid="uid://bfn47jugkvxco" path="res://assets/textures/ui/ui_position_quadrant.png" id="1_mrphe"]
@@ -94,6 +94,7 @@ func _race_ready():
 
 ## GUI response to race restarting
 func _race_restart():
+	race_finished = false
 	_clear_lap_display()
 	lap_timer = 0.0
 	reset_message()
@@ -117,8 +118,14 @@ func _ready() -> void:
 	GameController.race_restart.connect(_race_restart)
 	# Only show the start button on the host's screen
 	%HostStartButton.visible = GameController.server
-	# Singleplayer skips the lobby wait and starts the race right away
+	# A race already happened, so the lobby button offers a replay
+	if GameController.server and GameController.race_started:
+		%HostStartButton.text = \"PLAY AGAIN\"
+	# Singleplayer skips the lobby wait once and starts the race right away.
+	# Autostart is consumed so a later restart returns to the lobby instead.
 	if GameController.autostart and GameController.server:
+		GameController.autostart = false
+		GameController.race_started = true
 		GameController.race_ready.emit.call_deferred()
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -135,6 +142,7 @@ func _process(delta: float) -> void:
 
 ## Host wants to start the race
 func _on_host_start_button_pressed() -> void:
+	GameController.race_started = true
 	GameController.race_ready.emit()
 "
 
@@ -356,7 +364,7 @@ stacked_outline_0/size = 30
 stacked_shadow_0/offset = Vector2(9, 9)
 stacked_shadow_0/outline_size = 18
 
-[node name="GUIRoot" type="Control"]
+[node name="GUIRoot" type="Control" unique_id=1290209139]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -365,7 +373,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = SubResource("GDScript_mrphe")
 
-[node name="InGameGUI" type="Control" parent="."]
+[node name="InGameGUI" type="Control" parent="." unique_id=196504420]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -373,13 +381,11 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="InGameAnimPlayer" type="AnimationPlayer" parent="InGameGUI"]
+[node name="InGameAnimPlayer" type="AnimationPlayer" parent="InGameGUI" unique_id=1946236701]
 unique_name_in_owner = true
-libraries = {
-&"": SubResource("AnimationLibrary_ran6c")
-}
+libraries/ = SubResource("AnimationLibrary_ran6c")
 
-[node name="TextureRect" type="TextureRect" parent="InGameGUI"]
+[node name="TextureRect" type="TextureRect" parent="InGameGUI" unique_id=1394757842]
 layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
@@ -389,7 +395,7 @@ offset_right = 256.0
 grow_vertical = 0
 texture = ExtResource("1_mrphe")
 
-[node name="PositionLabel" type="Label" parent="InGameGUI/TextureRect"]
+[node name="PositionLabel" type="Label" parent="InGameGUI/TextureRect" unique_id=1194250066]
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 56.000004
@@ -400,7 +406,7 @@ rotation = 0.08726646
 text = "#1"
 label_settings = SubResource("LabelSettings_1iope")
 
-[node name="MapRoot" type="Control" parent="InGameGUI"]
+[node name="MapRoot" type="Control" parent="InGameGUI" unique_id=1062553288]
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
@@ -412,12 +418,12 @@ offset_top = -200.0
 grow_horizontal = 0
 grow_vertical = 0
 
-[node name="Path2D" type="Path2D" parent="InGameGUI/MapRoot"]
+[node name="Path2D" type="Path2D" parent="InGameGUI/MapRoot" unique_id=1737679924]
 visible = false
 position = Vector2(-952, -448)
 curve = SubResource("Curve2D_yjsay")
 
-[node name="PowerupRoot" type="Control" parent="InGameGUI"]
+[node name="PowerupRoot" type="Control" parent="InGameGUI" unique_id=1397882235]
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
@@ -429,7 +435,7 @@ offset_top = -200.0
 grow_horizontal = 0
 grow_vertical = 0
 
-[node name="PowerupTexture" type="ColorRect" parent="InGameGUI/PowerupRoot"]
+[node name="PowerupTexture" type="ColorRect" parent="InGameGUI/PowerupRoot" unique_id=803295102]
 unique_name_in_owner = true
 visible = false
 material = SubResource("ShaderMaterial_8m1nv")
@@ -447,7 +453,7 @@ offset_bottom = 60.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="MessageLabel" type="Label" parent="InGameGUI"]
+[node name="MessageLabel" type="Label" parent="InGameGUI" unique_id=147225544]
 unique_name_in_owner = true
 modulate = Color(1, 1, 1, 0)
 layout_mode = 1
@@ -455,8 +461,8 @@ anchors_preset = 14
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_top = -11.0
-offset_bottom = 125.00006
+offset_top = -47.0
+offset_bottom = 89.00006
 grow_horizontal = 2
 grow_vertical = 2
 rotation = -0.09599311
@@ -464,12 +470,12 @@ text = "FINISH!"
 label_settings = SubResource("LabelSettings_1iope")
 horizontal_alignment = 1
 
-[node name="MessageStreamPlayer" type="AudioStreamPlayer" parent="InGameGUI/MessageLabel"]
+[node name="MessageStreamPlayer" type="AudioStreamPlayer" parent="InGameGUI/MessageLabel" unique_id=1472834763]
 unique_name_in_owner = true
 volume_db = -8.0
 bus = &"GUI"
 
-[node name="LapContainer" type="VBoxContainer" parent="InGameGUI"]
+[node name="LapContainer" type="VBoxContainer" parent="InGameGUI" unique_id=65740087]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -480,24 +486,24 @@ offset_bottom = 202.0
 grow_horizontal = 0
 theme_override_constants/separation = -9
 
-[node name="LapInfo" type="Label" parent="InGameGUI/LapContainer"]
+[node name="LapInfo" type="Label" parent="InGameGUI/LapContainer" unique_id=2038503475]
 unique_name_in_owner = true
 layout_mode = 2
 text = "LAP 1"
 label_settings = SubResource("LabelSettings_1iope")
 horizontal_alignment = 2
 
-[node name="LapAudioPlayer" type="AudioStreamPlayer" parent="InGameGUI/LapContainer/LapInfo"]
+[node name="LapAudioPlayer" type="AudioStreamPlayer" parent="InGameGUI/LapContainer/LapInfo" unique_id=1341354265]
 unique_name_in_owner = true
 stream = ExtResource("3_pu6y0")
 volume_db = -15.0
 bus = &"GUI"
 
-[node name="LapTimers" type="VBoxContainer" parent="InGameGUI/LapContainer"]
+[node name="LapTimers" type="VBoxContainer" parent="InGameGUI/LapContainer" unique_id=956269457]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="LobbyPanelRoot" type="Panel" parent="InGameGUI"]
+[node name="LobbyPanelRoot" type="Panel" parent="InGameGUI" unique_id=147239869]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 8
@@ -512,7 +518,7 @@ offset_bottom = 252.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="PlayerSlotContainer" type="HFlowContainer" parent="InGameGUI/LobbyPanelRoot"]
+[node name="PlayerSlotContainer" type="HFlowContainer" parent="InGameGUI/LobbyPanelRoot" unique_id=549132885]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = -1
@@ -529,7 +535,7 @@ theme_override_constants/v_separation = 8
 alignment = 1
 last_wrap_alignment = 1
 
-[node name="PlayerLobbyTitle" type="Label" parent="InGameGUI/LobbyPanelRoot"]
+[node name="PlayerLobbyTitle" type="Label" parent="InGameGUI/LobbyPanelRoot" unique_id=574470126]
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
@@ -542,7 +548,7 @@ grow_horizontal = 2
 text = "Waiting for players.."
 label_settings = SubResource("LabelSettings_mrphe")
 
-[node name="HostStartButton" type="Button" parent="InGameGUI/LobbyPanelRoot"]
+[node name="HostStartButton" type="Button" parent="InGameGUI/LobbyPanelRoot" unique_id=1642170113]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
@@ -559,7 +565,7 @@ grow_horizontal = 2
 grow_vertical = 0
 text = "START GAME"
 
-[node name="FinishWrapUpText" type="Label" parent="InGameGUI"]
+[node name="FinishWrapUpText" type="Label" parent="InGameGUI" unique_id=1446508408]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1

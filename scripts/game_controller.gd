@@ -81,6 +81,7 @@ func client_send_player_list(dict: Dictionary[int, Dictionary]):
 var server := false
 var local_override := false
 var autostart := false
+var race_started := false
 
 var config := GameConfig.create()
 
