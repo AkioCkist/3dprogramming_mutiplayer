@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://bqh6xoj6rvv68" path="res://assets/skybox/skybox-day.png" id="4_1a2r0"]
 [ext_resource type="Texture2D" uid="uid://cmrgl33j5ggij" path="res://assets/textures/finish_line.png" id="4_uyqe3"]
 [ext_resource type="PackedScene" uid="uid://boy7iyv5lex3k" path="res://assets/models/low_poly_forest.glb" id="8_1iope"]
+[ext_resource type="PackedScene" uid="uid://c1t1w0twaahai" path="res://lipton.tscn" id="9_sjwej"]
 
 [sub_resource type="Curve3D" id="Curve3D_75jvp"]
 closed = true
@@ -177,5 +178,8 @@ mesh = SubResource("PlaneMesh_w31q1")
 
 [node name="Sketchfab_Scene" parent="." unique_id=2043540590 instance=ExtResource("8_1iope")]
 transform = Transform3D(-0.11257046, 0, -0.3261179, 0, 0.34500003, 0, 0.3261179, 0, -0.11257046, -63.85739, 0, 75.69115)
+
+[node name="lipton" parent="." unique_id=2128160806 instance=ExtResource("9_sjwej")]
+transform = Transform3D(0.992454, 0.122617744, 0, -0.122617744, 0.992454, 0, 0, 0, 1, -73.79767, 8.846205, 33.02568)
 
 [editable path="race_track"]

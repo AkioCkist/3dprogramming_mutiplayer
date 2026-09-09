@@ -9,6 +9,7 @@ signal race_ready()
 signal race_finished()
 signal race_wrapup()
 signal race_restart()
+signal return_to_menu()
 
 # Lobby signals
 signal player_joined(id: int, name: StringName, color: Color)
@@ -66,6 +67,18 @@ func client_request_connect_args():
 @rpc("authority", "call_remote", "reliable")
 func client_restart():
 	race_restart.emit()
+
+## Ask every peer (host included) to return to the main menu
+@rpc("authority", "call_local", "reliable")
+func client_notify_return_to_menu():
+	return_to_menu.emit()
+
+## Exit to the menu: notify clients, let the packet flush, then close the peer
+func leave_to_menu():
+	client_notify_return_to_menu.rpc()
+	# Give reliable packets time to reach clients before the peer shuts down
+	await get_tree().create_timer(1.0).timeout
+	close_peer()
 
 var current_level: RaceLevel
 var players: Dictionary[int, Dictionary] = {}

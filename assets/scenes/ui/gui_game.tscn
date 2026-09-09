@@ -116,6 +116,9 @@ func _ready() -> void:
 	GameController.race_ready.connect(_race_ready)
 	GameController.race_wrapup.connect(_race_wrapup)
 	GameController.race_restart.connect(_race_restart)
+	GameController.return_to_menu.connect(_go_to_menu)
+	# Only the host (and singleplayer) may leave to the menu
+	%ExitToMenuButton.visible = GameController.server
 	# Only show the start button on the host's screen
 	%HostStartButton.visible = GameController.server
 	# A race already happened, so the lobby button offers a replay
@@ -144,6 +147,21 @@ func _process(delta: float) -> void:
 func _on_host_start_button_pressed() -> void:
 	GameController.race_started = true
 	GameController.race_ready.emit()
+
+## Leave the race and go back to the main menu
+func _on_exit_to_menu_button_pressed() -> void:
+	GameController.leave_to_menu()
+
+## Navigate back to the main menu (singleplayer, host or kicked client)
+func _go_to_menu() -> void:
+	if not GameController.server and GameController.has_peer():
+		GameController.close_peer()
+	GameController.players.clear()
+	GameController.server = false
+	GameController.local_override = false
+	GameController.autostart = false
+	GameController.race_started = false
+	get_tree().change_scene_to_file(\"res://assets/scenes/ui/gui_menu.tscn\")
 "
 
 [sub_resource type="Animation" id="Animation_ran6c"]
@@ -565,6 +583,23 @@ grow_horizontal = 2
 grow_vertical = 0
 text = "START GAME"
 
+[node name="ExitToMenuButton" type="Button" parent="InGameGUI/LobbyPanelRoot" unique_id=1010000041]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 61.0
+offset_top = -46.0
+offset_right = 173.0
+offset_bottom = -15.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "MAIN MENU"
+
 [node name="FinishWrapUpText" type="Label" parent="InGameGUI" unique_id=1446508408]
 unique_name_in_owner = true
 visible = false
@@ -585,3 +620,4 @@ label_settings = SubResource("LabelSettings_mrphe")
 horizontal_alignment = 1
 
 [connection signal="pressed" from="InGameGUI/LobbyPanelRoot/HostStartButton" to="." method="_on_host_start_button_pressed"]
+[connection signal="pressed" from="InGameGUI/LobbyPanelRoot/ExitToMenuButton" to="." method="_on_exit_to_menu_button_pressed"]

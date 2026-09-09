@@ -150,8 +150,8 @@ func peer_disconnected(id: int):
 		veh.queue_free()
 	GameController.client_send_player_list.rpc(GameController.players)
 
-## End race 20 seconds after placing the first 3 players.
-var wrap_up_timer := 20.0
+## End race 5 seconds after placing the first 3 players.
+var wrap_up_timer := 5.0
 
 func _ready_music():
 	if music:
