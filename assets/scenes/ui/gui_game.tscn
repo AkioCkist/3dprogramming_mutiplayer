@@ -568,16 +568,15 @@ label_settings = SubResource("LabelSettings_mrphe")
 
 [node name="HostStartButton" type="Button" parent="InGameGUI/LobbyPanelRoot" unique_id=1642170113]
 unique_name_in_owner = true
-visible = false
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -53.0
-offset_top = -46.0
-offset_right = 53.0
+offset_left = -172.0
+offset_top = -48.0
+offset_right = -66.0
 offset_bottom = -15.0
 grow_horizontal = 2
 grow_vertical = 0
@@ -585,7 +584,6 @@ text = "START GAME"
 
 [node name="ExitToMenuButton" type="Button" parent="InGameGUI/LobbyPanelRoot" unique_id=1010000041]
 unique_name_in_owner = true
-visible = false
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
